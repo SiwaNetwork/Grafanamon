@@ -1,0 +1,143 @@
+# Пример файла custom-values.yaml для кастомизации установки Shiwatime
+# Скопируйте этот файл как custom-values.yaml и измените нужные параметры
+
+# Настройки репликации
+replicaCount: 1
+
+# Настройки образа
+image:
+  repository: siwanetwork/shiwatime
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Настройки сервиса
+service:
+  type: LoadBalancer  # Может быть ClusterIP, NodePort или LoadBalancer
+  port: 80
+  targetPort: 8080
+  # Для NodePort укажите конкретный порт (30000-32767)
+  # nodePort: 30080
+
+# Настройки Ingress (если нужен внешний доступ через домен)
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: shiwatime.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: shiwatime-tls
+  #    hosts:
+  #      - shiwatime.example.com
+
+# Настройки ресурсов
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+# Настройки хранилища
+persistence:
+  enabled: true
+  storageClass: "microk8s-hostpath"  # Для MicroK8s
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+# Переменные окружения
+env:
+  - name: NODE_ENV
+    value: "production"
+  - name: LOG_LEVEL
+    value: "info"
+  # Добавьте свои переменные окружения здесь
+
+# Настройки базы данных (если используется)
+database:
+  type: "postgresql"  # или mysql, mongodb и т.д.
+  host: "postgres-service"
+  port: 5432
+  name: "shiwatime"
+  user: "shiwatime"
+  # Пароль лучше хранить в секрете
+  # password: "your-password"
+  existingSecret: ""  # Имя существующего секрета с паролем
+
+# Настройки мониторинга
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    port: 9090
+  grafana:
+    enabled: true
+    adminUser: admin
+    # adminPassword лучше хранить в секрете
+    existingSecret: ""
+
+# Настройки автомасштабирования
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# Настройки проб здоровья
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
+
+# Настройки безопасности
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+# Настройки сетевых политик
+networkPolicy:
+  enabled: false
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            app: shiwatime
+      ports:
+      - protocol: TCP
+        port: 8080
+
+# Дополнительные метки и аннотации
+labels: {}
+annotations: {}
+
+# Настройки для конкретных компонентов (если есть)
+# backend:
+#   enabled: true
+#   replicaCount: 2
+#   image:
+#     repository: siwanetwork/shiwatime-backend
+#     tag: latest
+
+# frontend:
+#   enabled: true
+#   replicaCount: 1
+#   image:
+#     repository: siwanetwork/shiwatime-frontend
+#     tag: latest
