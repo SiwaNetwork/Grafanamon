@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Release.Namespace | default "shiwatime" }}
+  labels:
+    app.kubernetes.io/name: {{ include "shiwatime-backend-chart.name" . }}
+    helm.sh/chart: {{ include "shiwatime-backend-chart.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/part-of: shiwatime-platform

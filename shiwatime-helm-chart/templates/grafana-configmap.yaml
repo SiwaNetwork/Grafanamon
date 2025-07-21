@@ -1,0 +1,229 @@
+{{- if .Values.grafana.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "shiwatime-backend-chart.fullname" . }}-grafana-config
+  labels:
+    {{- include "shiwatime-backend-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: grafana
+data:
+  grafana.ini: |
+    [paths]
+    data = /var/lib/grafana
+    logs = /var/log/grafana
+    plugins = /var/lib/grafana/plugins
+    provisioning = /etc/grafana/provisioning
+
+    [server]
+    protocol = http
+    http_port = 3000
+    domain = localhost
+    enforce_domain = false
+    root_url = %(protocol)s://%(domain)s:%(http_port)s/
+    serve_from_sub_path = false
+    router_logging = false
+    static_root_path = public
+    enable_gzip = false
+    cert_file =
+    cert_key =
+    socket =
+
+    [database]
+    type = sqlite3
+    path = grafana.db
+
+    [auth]
+    login_cookie_name = shiwatime_session
+    login_maximum_inactive_lifetime_duration = 
+    login_maximum_lifetime_duration = 
+    token_rotation_interval_minutes = 10
+    disable_login_form = false
+    disable_signout_menu = false
+    signout_redirect_url = 
+    oauth_auto_login = false
+    oauth_state_cookie_max_age = 600
+    api_key_max_seconds_to_live = -1
+    sigv4_auth_enabled = false
+
+    [auth.anonymous]
+    enabled = false
+    org_name = {{ .Values.branding.companyName }}
+    org_role = Viewer
+    hide_version = false
+
+    [auth.basic]
+    enabled = true
+    realm = {{ .Values.branding.companyName }} Monitoring
+
+    [auth.proxy]
+    enabled = false
+
+    [users]
+    allow_sign_up = false
+    allow_org_create = false
+    auto_assign_org = true
+    auto_assign_org_id = 1
+    auto_assign_org_role = Viewer
+    verify_email_enabled = false
+    login_hint = username
+    password_hint = password
+    default_theme = dark
+    external_manage_link_url = 
+    external_manage_link_name = 
+    external_manage_info = 
+    viewers_can_edit = false
+    editors_can_admin = false
+    user_invite_max_lifetime_duration = 24h
+
+    [rendering]
+    server_url = 
+    callback_url = 
+    concurrent_render_request_limit = 30
+
+    [security]
+    disable_initial_admin_creation = false
+    admin_user = {{ .Values.grafana.adminUser }}
+    admin_password = {{ .Values.grafana.adminPassword }}
+    secret_key = SW5OM0l3OFNnZDVPNGJPZUdUSVdBVElNRQ==
+    disable_gravatar = false
+    data_source_proxy_whitelist = 
+    disable_brute_force_login_protection = false
+    cookie_secure = false
+    cookie_samesite = lax
+    allow_embedding = false
+    strict_transport_security = false
+    strict_transport_security_max_age_seconds = 86400
+    strict_transport_security_preload = false
+    strict_transport_security_subdomains = false
+    x_content_type_options = true
+    x_xss_protection = true
+    content_security_policy = false
+    content_security_policy_template = """script-src 'self' 'unsafe-eval' 'unsafe-inline' 'strict-dynamic' $NONCE;object-src 'none';font-src 'self';style-src 'self' 'unsafe-inline' blob:;img-src * data:;base-uri 'self';connect-src 'self' grafana.com ws://$ROOT_PATH wss://$ROOT_PATH;manifest-src 'self';media-src 'none';form-action 'self';"""
+
+    [snapshots]
+    external_enabled = true
+    external_snapshot_url = https://snapshots-origin.raintank.io
+    external_snapshot_name = Publish to snapshot.raintank.io
+    public_mode = false
+
+    [dashboards]
+    versions_to_keep = 20
+    min_refresh_interval = 5s
+    default_home_dashboard_path = 
+
+    [smtp]
+    enabled = false
+
+    [log]
+    mode = console
+    level = info
+
+    [quota]
+    enabled = false
+
+    [alerting]
+    enabled = true
+    execute_alerts = true
+    error_or_timeout = alerting
+    nodata_or_nullvalues = no_data
+    concurrent_render_limit = 5
+    evaluation_timeout_seconds = 30
+    notification_timeout_seconds = 30
+    max_attempts = 3
+    min_interval_seconds = 1
+    max_annotation_age = 
+    max_annotations_to_keep = 
+
+    [annotations.dashboard]
+    max_age = 
+    max_annotations_to_keep = 
+
+    [annotations.api]
+    max_age = 
+    max_annotations_to_keep = 
+
+    [unified_alerting]
+    enabled = true
+    execute_alerts = true
+    evaluation_timeout = 30s
+    max_attempts = 3
+    min_interval = 10s
+
+    [panels]
+    disable_sanitize_html = true
+
+    [plugins]
+    enable_alpha = false
+    app_tls_skip_verify_insecure = false
+    allow_loading_unsigned_plugins = 
+    marketplace_url = https://grafana.com/grafana/plugins/
+
+    [feature_toggles]
+    enable = 
+
+    [date_formats]
+    full_date = YYYY-MM-DD HH:mm:ss
+    interval_second = HH:mm:ss
+    interval_minute = HH:mm
+    interval_hour = MM/DD HH:mm
+    interval_day = MM/DD
+    interval_month = YYYY-MM
+    interval_year = YYYY
+    use_browser_locale = false
+    default_timezone = browser
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "shiwatime-backend-chart.fullname" . }}-grafana-datasources
+  labels:
+    {{- include "shiwatime-backend-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: grafana
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Elasticsearch-SHIWATIME
+        type: elasticsearch
+        access: proxy
+        url: http://{{ include "shiwatime-backend-chart.fullname" . }}-elasticsearch:9200
+        isDefault: true
+        jsonData:
+          esVersion: "7.10+"
+          timeField: "@timestamp"
+          interval: Daily
+          logMessageField: message
+          logLevelField: level
+        editable: true
+      {{- if .Values.prometheus.enabled }}
+      - name: Prometheus-SHIWATIME
+        type: prometheus
+        access: proxy
+        url: http://{{ include "shiwatime-backend-chart.fullname" . }}-prometheus:9090
+        isDefault: false
+        editable: true
+      {{- end }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "shiwatime-backend-chart.fullname" . }}-grafana-dashboards
+  labels:
+    {{- include "shiwatime-backend-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: grafana
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: 'shiwatime-dashboards'
+        orgId: 1
+        folder: 'SHIWA TIME'
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 10
+        allowUiUpdates: true
+        options:
+          path: /var/lib/grafana/dashboards/shiwatime
+{{- end }}

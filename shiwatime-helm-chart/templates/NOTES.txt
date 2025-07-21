@@ -1,0 +1,57 @@
+🎉 SHIWA TIME has been successfully deployed!
+
+To access your SHIWA TIME platform:
+
+1. Get the Elasticsearch URL:
+{{- if .Values.elasticsearch.enabled }}
+   {{- if eq .Values.elasticsearch.service.type "LoadBalancer" }}
+   NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+   You can watch the status by running:
+   kubectl get svc --namespace {{ .Release.Namespace }} -w {{ include "shiwatime-backend-chart.fullname" . }}-elasticsearch
+
+   export ELASTICSEARCH_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "shiwatime-backend-chart.fullname" . }}-elasticsearch -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+   echo "Elasticsearch URL: http://$ELASTICSEARCH_IP:{{ .Values.elasticsearch.service.port }}"
+   {{- else }}
+   kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "shiwatime-backend-chart.fullname" . }}-elasticsearch {{ .Values.elasticsearch.service.port }}:{{ .Values.elasticsearch.service.port }}
+   echo "Elasticsearch URL: http://localhost:{{ .Values.elasticsearch.service.port }}"
+   {{- end }}
+{{- end }}
+
+2. Get the Grafana URL:
+{{- if .Values.grafana.enabled }}
+   {{- if eq .Values.grafana.service.type "LoadBalancer" }}
+   NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+   You can watch the status by running:
+   kubectl get svc --namespace {{ .Release.Namespace }} -w {{ include "shiwatime-backend-chart.fullname" . }}-grafana
+
+   export GRAFANA_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "shiwatime-backend-chart.fullname" . }}-grafana -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+   echo "Grafana URL: http://$GRAFANA_IP:{{ .Values.grafana.service.port }}"
+   {{- else }}
+   kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "shiwatime-backend-chart.fullname" . }}-grafana {{ .Values.grafana.service.port }}:3000
+   echo "Grafana URL: http://localhost:{{ .Values.grafana.service.port }}"
+   {{- end }}
+
+   Login credentials:
+   Username: {{ .Values.grafana.adminUser }}
+   Password: {{ .Values.grafana.adminPassword }}
+   
+   ⚠️  You will be prompted to change the password upon first login.
+{{- end }}
+
+3. Check deployment status:
+   kubectl get all --namespace {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+
+4. View logs:
+   # Elasticsearch logs
+   kubectl logs --namespace {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/component=elasticsearch
+   
+   # Grafana logs
+   kubectl logs --namespace {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/component=grafana
+
+📊 SHIWA TIME Dashboards:
+   - System Overview: Available in Grafana under "SHIWA TIME" folder
+   - Detailed Monitoring: Real-time metrics and logs visualization
+
+📧 Support: {{ .Values.branding.supportEmail }}
+
+Thank you for choosing SHIWA TIME! 🚀

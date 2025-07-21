@@ -1,0 +1,122 @@
+{{- if .Values.grafana.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "shiwatime-backend-chart.fullname" . }}-branding
+  labels:
+    {{- include "shiwatime-backend-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: grafana
+binaryData:
+  # Base64 encoded SVG logo for SHIWA TIME
+  grafana_icon.svg: |
+    PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTQiIGZpbGw9IiM0QTkwRTIiLz4KPHBhdGggZD0iTTE2IDZWMTZMMjIgMjIiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPg==
+  fav32.png: |
+    iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAA7AAAAOwBeShxvQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3Njape.org5vuPBoAAAKoSURBVFiFtZfPaxNBFMc/s5tsNmk2SZukP2xrq7QqVEQRPHjx4kEQBEHw5sGLf4AHL148ePHgxYMXQRAEQfDgxYMgCIJQFEGptlqrtbRNmjRpks1ms5nZnR0PaWI2u0kT+8Ew7Jv3vu/7zrz3ZgT+Y4jNHpBSsmXLFsbHx5menmZpaQnXdQkEAkSjUfr7+xkYGCAUCiGE2FQAIcSmAEgpicViDA0NMTo6SjQaJRQKEQgEcF2XpaUlpqenmZiYIB6Ps3PnTnbt2kU4HN44CCEEruty9epVLl26RH9/P8eOHWPPnj1EIhGklLiuSz6fZ3Z2lrGxMW7fvs3k5CRnzpzh8OHDGwMghODOnTtcuHCBgwcPcvr0aeLxeJUtGAyyd+9e9u7dSyaT4ebNm1y+fJnBwUHOnTtHNBptH0AIwc2bN7lw4QKnTp3ixIkTdQOvRyQS4eTJkxw5coTz589z7do1zp49y6FDh9oDEEJw48YNLl68yOnTpzl+/HhbwVfR09PDmTNnOHDgAOfPn+fWrVucPXuWffv2tQ6gquqGg69i69atnDt3jv3793P+/Hnu3bvHuXPn2L59e2sAqqpy/fr1DQdfw+7duzl//jyjo6OcP3+eR48ecfbsWQYGBpoHUFWVa9eutRS8pmnk83lM08QwDCzLwnEcHMfBtm0cx0HTNGKxmO+8HTt2VEB8/PiRs2fPEovFmgNQVZUrV67UBZ/P5/n8+TMLCwssLCyQTqdJp9NkMhmy2SzBYJDu7m66u7vp6emhp6eHvr4+kskkqqr6wgwODnLhwgU+fPjAuXPn2Lp1a+MA6gWfz+eZmpri/fv3TE1NMT09zezsbNO/2Gw2y8TEBBMTEzx58gSAeDxOMplkaGiIZDJJIpEgEAhUzdu+fXsFxLlz5+jr62sMwC/4bDbL27dvefPmDePj43z69Im5ubmmk1yPTCbDy5cvefnyZeVaOBxmcHCQ3bt3s2fPHoaHh4lEIpV7g4ODXL58mXfv3nH+/Hni8bg/gOu6XLp0yRN8Npvl1atXvHjxgvHxcaampvj27VtTSbWCUkq+fv3K169fefbsGQCBQIBEIkEymWR4eJg9e/awbds2IpEIZ8+e5f379/4A8Xgc0zSZnJxkYmKCjx8/Mjk5ydTUFAsLC/9s4c3Atm3m5+eZn5/n9evXPH36FIDOzk7i8TjJZJLdu3czPDxMIpHwBxBCEAqFCAaDmKZJLpfDNM0tqVTqRCqVOgkcA+Lr5koA4uXfR6qq6gvgEfAYeKQoSqEqeSklSimVKIqCpmmYpkkul6NYLFIsFrEsC9u2sW0b13WRUiKEQAhR+VdVFU3T0HWdYDBIOBwmHA7T0dFBMBhE13UURfGNV+vvN5jxIKPJIzoAAAAASUVORK5CYII=
+data:
+  # Custom loading screen HTML
+  loading.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>SHIWA TIME - Loading</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+                color: white;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                overflow: hidden;
+            }
+            .loading-container {
+                text-align: center;
+                animation: fadeIn 0.5s ease-in;
+            }
+            .logo {
+                width: 120px;
+                height: 120px;
+                margin: 0 auto 30px;
+                position: relative;
+            }
+            .logo-circle {
+                width: 100%;
+                height: 100%;
+                border: 4px solid rgba(255, 255, 255, 0.2);
+                border-radius: 50%;
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+            .logo-hand {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 3px;
+                height: 40%;
+                background: white;
+                transform-origin: bottom;
+                animation: rotate 2s linear infinite;
+            }
+            .logo-center {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 10px;
+                height: 10px;
+                background: white;
+                border-radius: 50%;
+                transform: translate(-50%, -50%);
+            }
+            h1 {
+                font-size: 2.5em;
+                margin: 0 0 10px 0;
+                font-weight: 300;
+                letter-spacing: 2px;
+            }
+            .tagline {
+                font-size: 1.2em;
+                opacity: 0.8;
+                margin-bottom: 40px;
+            }
+            .spinner {
+                width: 50px;
+                height: 50px;
+                border: 3px solid rgba(255, 255, 255, 0.3);
+                border-top-color: white;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin: 0 auto;
+            }
+            @keyframes rotate {
+                from { transform: translate(-50%, -100%) rotate(0deg); }
+                to { transform: translate(-50%, -100%) rotate(360deg); }
+            }
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="loading-container">
+            <div class="logo">
+                <div class="logo-circle"></div>
+                <div class="logo-hand"></div>
+                <div class="logo-center"></div>
+            </div>
+            <h1>SHIWA TIME</h1>
+            <p class="tagline">Modern Metrics Collection Platform</p>
+            <div class="spinner"></div>
+        </div>
+    </body>
+    </html>
+{{- end }}
