@@ -1,0 +1,21 @@
+apiVersion: v2
+name: shiwatime-backend-chart
+description: SHIWA TIME Management Platform - Modern metrics collection and monitoring system
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - monitoring
+  - metrics
+  - grafana
+  - prometheus
+  - shiwatime
+home: https://shiwatime.io
+sources:
+  - https://github.com/shiwatime/shiwatime-platform
+maintainers:
+  - name: SHIWA TIME Team
+    email: support@shiwatime.io
+icon: https://shiwatime.io/logo.png
+annotations:
+  category: Monitoring
