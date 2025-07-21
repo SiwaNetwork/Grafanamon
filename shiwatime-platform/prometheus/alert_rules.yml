@@ -1,0 +1,104 @@
+groups:
+  - name: shiwatime_alerts
+    interval: 30s
+    rules:
+      # API Health Alerts
+      - alert: ShiwaTimeAPIDown
+        expr: up{job="shiwatime-api"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: shiwatime-api
+        annotations:
+          summary: "ShiwaTime API is down"
+          description: "ShiwaTime API has been down for more than 5 minutes."
+
+      - alert: ShiwaTimeAPIHighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="shiwatime-api"}[5m])) > 1
+        for: 10m
+        labels:
+          severity: warning
+          service: shiwatime-api
+        annotations:
+          summary: "ShiwaTime API high response time"
+          description: "95th percentile response time is above 1 second for 10 minutes."
+
+      - alert: ShiwaTimeAPIHighErrorRate
+        expr: rate(http_requests_total{job="shiwatime-api",status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: shiwatime-api
+        annotations:
+          summary: "ShiwaTime API high error rate"
+          description: "Error rate is above 5% for 5 minutes."
+
+      # Database Alerts
+      - alert: PostgreSQLDown
+        expr: up{job="postgres"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: postgres
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL database has been down for more than 5 minutes."
+
+      - alert: PostgreSQLHighConnections
+        expr: pg_stat_database_numbackends{datname="shiwatime"} > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: postgres
+        annotations:
+          summary: "PostgreSQL high connection count"
+          description: "PostgreSQL has more than 80 active connections."
+
+      # System Alerts
+      - alert: HighCPUUsage
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 80% for 10 minutes."
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is above 85% for 10 minutes."
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space"
+          description: "Disk space is below 10%."
+
+      # Redis Alerts
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache has been down for more than 5 minutes."
+
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis high memory usage"
+          description: "Redis is using more than 90% of allocated memory."

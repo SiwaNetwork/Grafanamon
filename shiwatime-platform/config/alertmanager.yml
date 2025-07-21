@@ -1,0 +1,55 @@
+global:
+  resolve_timeout: 5m
+  smtp_from: 'alerts@shiwatime.local'
+  smtp_smarthost: 'localhost:25'
+  smtp_require_tls: false
+
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'shiwatime-admins'
+  routes:
+    - match:
+        severity: critical
+      receiver: shiwatime-critical
+    - match:
+        severity: warning
+      receiver: shiwatime-warning
+
+receivers:
+  - name: 'shiwatime-admins'
+    email_configs:
+      - to: 'admin@shiwatime.local'
+        headers:
+          Subject: 'ShiwaTime Alert: {{ .GroupLabels.alertname }}'
+        html: |
+          <h2>ShiwaTime Management Platform Alert</h2>
+          <p><b>Alert:</b> {{ .GroupLabels.alertname }}</p>
+          <p><b>Description:</b> {{ .CommonAnnotations.description }}</p>
+          <p><b>Details:</b></p>
+          <ul>
+          {{ range .Alerts }}
+            <li>{{ .Annotations.summary }}</li>
+          {{ end }}
+          </ul>
+
+  - name: 'shiwatime-critical'
+    email_configs:
+      - to: 'critical@shiwatime.local'
+        headers:
+          Subject: '[CRITICAL] ShiwaTime Alert: {{ .GroupLabels.alertname }}'
+
+  - name: 'shiwatime-warning'
+    email_configs:
+      - to: 'warnings@shiwatime.local'
+        headers:
+          Subject: '[WARNING] ShiwaTime Alert: {{ .GroupLabels.alertname }}'
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'cluster', 'service']
