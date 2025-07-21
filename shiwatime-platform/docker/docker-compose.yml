@@ -1,0 +1,169 @@
+version: '3.8'
+
+services:
+  # ShiwaTime API Service
+  shiwatime-api:
+    image: shiwatime/api:latest
+    container_name: shiwatime-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=shiwatime
+      - DB_USER=shiwatime
+      - DB_PASSWORD=${DB_PASSWORD:-shiwatime123}
+      - PROMETHEUS_ENABLED=true
+      - LOG_LEVEL=info
+    volumes:
+      - ./config/shiwatime.yaml:/app/config/shiwatime.yaml
+      - shiwatime-logs:/app/logs
+    depends_on:
+      - postgres
+      - prometheus
+    networks:
+      - shiwatime-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: shiwatime-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=shiwatime
+      - POSTGRES_USER=shiwatime
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-shiwatime123}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - shiwatime-network
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: shiwatime-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    networks:
+      - shiwatime-network
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: shiwatime-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-piechart-panel,yesoreyeram-boomtheme-panel
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_AUTH_ANONYMOUS_ORG_NAME=ShiwaTime
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      - GF_RENDERING_SERVER_URL=http://renderer:8081/render
+      - GF_RENDERING_CALLBACK_URL=http://grafana:3000/
+      - GF_LOG_FILTERS=rendering:debug
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ../grafana/provisioning:/etc/grafana/provisioning
+      - ../grafana/dashboards:/var/lib/grafana/dashboards
+      - ../grafana/custom-loading.html:/usr/share/grafana/public/views/index.html
+    depends_on:
+      - prometheus
+      - renderer
+    networks:
+      - shiwatime-network
+
+  # Grafana Image Renderer for PDF/PNG export
+  renderer:
+    image: grafana/grafana-image-renderer:latest
+    container_name: shiwatime-renderer
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - ENABLE_METRICS=true
+      - LOG_LEVEL=info
+    networks:
+      - shiwatime-network
+
+  # Alertmanager for alert handling
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: shiwatime-alertmanager
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
+    ports:
+      - "9093:9093"
+    volumes:
+      - ../config/alertmanager.yml:/etc/alertmanager/config.yml
+      - alertmanager-data:/alertmanager
+    networks:
+      - shiwatime-network
+
+  # Node Exporter for host metrics
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: shiwatime-node-exporter
+    restart: unless-stopped
+    command:
+      - '--path.rootfs=/host'
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - shiwatime-network
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: shiwatime-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - shiwatime-network
+
+volumes:
+  postgres-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  alertmanager-data:
+    driver: local
+  redis-data:
+    driver: local
+  shiwatime-logs:
+    driver: local
+
+networks:
+  shiwatime-network:
+    driver: bridge

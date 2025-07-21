@@ -1,0 +1,13 @@
+apiVersion: 1
+
+providers:
+  - name: 'ShiwaTime Dashboards'
+    orgId: 1
+    folder: 'ShiwaTime'
+    folderUid: shiwatime
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards

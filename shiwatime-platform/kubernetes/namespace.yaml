@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shiwatime
+  labels:
+    name: shiwatime
+    app: shiwatime-platform

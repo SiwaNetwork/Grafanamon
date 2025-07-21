@@ -1,0 +1,69 @@
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Data directories
+data/
+*/data/
+elasticsearch/data/
+prometheus/data/
+grafana/data/
+postgres/data/
+redis/data/
+
+# Log files
+logs/
+*.log
+
+# Backup files
+*.tar.gz
+backup-*/
+*.bak
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Docker volumes
+docker/volumes/
+
+# Kubernetes secrets
+kubernetes/secrets/
+
+# SSL certificates
+*.pem
+*.crt
+*.key
+*.jks
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+env/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
